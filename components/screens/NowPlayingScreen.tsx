@@ -8,9 +8,9 @@ import React, { useEffect, useState } from "react";
 import {
   Dimensions,
   Image,
+  Pressable,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -25,13 +25,13 @@ export const NowPlayingScreen = () => {
     total: 0,
     progress: 0,
   });
-  const playlist = useAudioContext((state) => state.playlist);
+  const playlist = useAudioContext((state) => state.playlist) || [];
   const song = useAudioContext((state) => state.song);
   const setSong = useAudioContext((state) => state.setSong);
   const togglePlayPause = useAudioContext((state) => state.setIsPlaying);
   const isPlaying = useAudioContext((state) => state.isPlaying);
   const isFavorite = useFavourite((state) =>
-    state.songs.find((song) => song?.id === song?.id),
+    state.songs.find((favSong) => favSong?.id === song?.id),
   );
   const favouriteToggle = useFavourite((state) => state.toggleSong);
   const [shuffle, setShuffle] = useState(false);
@@ -134,20 +134,20 @@ export const NowPlayingScreen = () => {
     <View style={[styles.container, { paddingTop: insets.top + 12 }]}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.headerButton} onPress={onClose}>
+        <Pressable style={styles.headerButton} onPress={onClose}>
           <Ionicons
             name="chevron-down"
             size={28}
             color={AppColors.textPrimary}
           />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.headerButton} onPress={onMenuPress}>
+        </Pressable>
+        <Pressable style={styles.headerButton} onPress={onMenuPress}>
           <Ionicons
             name="ellipsis-vertical"
             size={24}
             color={AppColors.textPrimary}
           />
-        </TouchableOpacity>
+        </Pressable>
       </View>
 
       {/* Album Artwork */}
@@ -168,7 +168,7 @@ export const NowPlayingScreen = () => {
       <View style={styles.songInfo}>
         <View style={styles.songTitleRow}>
           <Text style={styles.songTitle}>{song?.title}</Text>
-          <TouchableOpacity onPress={() => favouriteToggle(song)}>
+          <Pressable onPress={() => favouriteToggle(song)}>
             <Ionicons
               name={isFavorite ? "heart" : "heart-outline"}
               size={24}
@@ -176,7 +176,7 @@ export const NowPlayingScreen = () => {
                 isFavorite ? AppColors.accentCyan : AppColors.textSecondary
               }
             />
-          </TouchableOpacity>
+          </Pressable>
         </View>
         <Text style={styles.artistName}>{song?.artist}</Text>
       </View>
@@ -192,8 +192,8 @@ export const NowPlayingScreen = () => {
 
       {/* Controls */}
       <View style={styles.controls}>
-        <TouchableOpacity
-          disabled={!player}
+        <Pressable
+          disabled={!player || playlist.length < 1}
           style={styles.controlButton}
           onPress={onShuffle}
         >
@@ -202,10 +202,10 @@ export const NowPlayingScreen = () => {
             size={24}
             color={shuffle ? AppColors.accentCyan : AppColors.textSecondary}
           />
-        </TouchableOpacity>
+        </Pressable>
 
-        <TouchableOpacity
-          disabled={!player}
+        <Pressable
+          disabled={!player || playlist.length < 1}
           style={styles.controlButton}
           onPress={onPrevious}
         >
@@ -214,9 +214,9 @@ export const NowPlayingScreen = () => {
             size={28}
             color={AppColors.textPrimary}
           />
-        </TouchableOpacity>
+        </Pressable>
 
-        <TouchableOpacity
+        <Pressable
           disabled={!player}
           style={styles.playButton}
           onPress={onPlayPause}
@@ -226,10 +226,10 @@ export const NowPlayingScreen = () => {
             size={32}
             color={AppColors.textPrimary}
           />
-        </TouchableOpacity>
+        </Pressable>
 
-        <TouchableOpacity
-          disabled={!player}
+        <Pressable
+          disabled={!player || playlist.length < 1}
           style={styles.controlButton}
           onPress={onNext}
         >
@@ -238,46 +238,20 @@ export const NowPlayingScreen = () => {
             size={28}
             color={AppColors.textPrimary}
           />
-        </TouchableOpacity>
+        </Pressable>
 
-        <TouchableOpacity style={styles.controlButton} onPress={onRepeat}>
+        <Pressable
+          disabled={!player || playlist.length < 1}
+          style={styles.controlButton}
+          onPress={onRepeat}
+        >
           <Ionicons
             name="repeat"
             size={24}
             color={repeat ? AppColors.accentCyan : AppColors.textSecondary}
           />
-        </TouchableOpacity>
+        </Pressable>
       </View>
-
-      {/* Bottom Tabs */}
-      {/* <View style={styles.bottomTabs}>
-        <TouchableOpacity
-          style={styles.bottomTab}
-          onPress={() => setActiveBottomTab("lyrics")}
-        >
-          <Text
-            style={[
-              styles.bottomTabText,
-              activeBottomTab === "lyrics" && styles.bottomTabTextActive,
-            ]}
-          >
-            LYRICS
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.bottomTab}
-          onPress={() => setActiveBottomTab("related")}
-        >
-          <Text
-            style={[
-              styles.bottomTabText,
-              activeBottomTab === "related" && styles.bottomTabTextActive,
-            ]}
-          >
-            RELATED
-          </Text>
-        </TouchableOpacity>
-      </View> */}
     </View>
   );
 };

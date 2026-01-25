@@ -87,7 +87,7 @@ export const SongsScreen: React.FC<SongsScreenProps> = ({
 
       {/* Mini Player */}
       <View style={styles.miniPlayerContainer}>
-        <MiniPlayer onPress={onMiniPlayerPress} lightTheme={true} />
+        <MiniPlayer lightTheme={true} />
       </View>
     </View>
   );

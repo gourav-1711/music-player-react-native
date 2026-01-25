@@ -3,13 +3,7 @@ import { AppColors } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useState } from "react";
-import {
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 interface SettingsScreenProps {
@@ -38,13 +32,13 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
     <View style={[styles.container, { paddingTop: insets.top }]}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={onBackPress}>
+        <Pressable style={styles.backButton} onPress={onBackPress}>
           <Ionicons
             name="chevron-back"
             size={28}
             color={AppColors.textPrimary}
           />
-        </TouchableOpacity>
+        </Pressable>
       </View>
 
       <Text style={styles.title}>Settings</Text>
@@ -55,11 +49,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
         contentContainerStyle={styles.scrollContent}
       >
         {/* Scan Storage Banner */}
-        <TouchableOpacity
-          style={styles.scanBanner}
-          onPress={onScanStorage}
-          activeOpacity={0.9}
-        >
+        <Pressable style={styles.scanBanner} onPress={onScanStorage}>
           <LinearGradient
             colors={["#00F5D4", "#00D4AA"]}
             start={{ x: 0, y: 0 }}
@@ -83,7 +73,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
               color={AppColors.textLight}
             />
           </LinearGradient>
-        </TouchableOpacity>
+        </Pressable>
 
         {/* Appearance Section */}
         <Text style={styles.sectionTitle}>APPEARANCE</Text>

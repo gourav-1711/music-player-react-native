@@ -1,7 +1,7 @@
 import { AppColors } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import { StyleSheet, Switch, Text, TouchableOpacity, View } from "react-native";
+import { Pressable, StyleSheet, Switch, Text, View } from "react-native";
 
 type SettingsItemType = "toggle" | "navigation" | "value";
 
@@ -68,10 +68,10 @@ export const SettingsListItem: React.FC<SettingsListItemProps> = ({
   };
 
   return (
-    <TouchableOpacity
+    <Pressable
       style={styles.container}
       onPress={type !== "toggle" ? onPress : undefined}
-      activeOpacity={type !== "toggle" ? 0.7 : 1}
+      disabled={type === "toggle"}
     >
       <View style={[styles.iconContainer, { backgroundColor: iconBgColor }]}>
         <Ionicons name={icon} size={22} color={iconColor} />
@@ -83,7 +83,7 @@ export const SettingsListItem: React.FC<SettingsListItemProps> = ({
       </View>
 
       {renderRightContent()}
-    </TouchableOpacity>
+    </Pressable>
   );
 };
 

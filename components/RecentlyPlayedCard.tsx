@@ -1,6 +1,6 @@
 import { AppColors } from "@/constants/theme";
 import React from "react";
-import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 
 interface RecentlyPlayedCardProps {
   title: string;
@@ -16,11 +16,7 @@ export const RecentlyPlayedCard: React.FC<RecentlyPlayedCardProps> = ({
   onPress,
 }) => {
   return (
-    <TouchableOpacity
-      style={styles.container}
-      onPress={onPress}
-      activeOpacity={0.8}
-    >
+    <Pressable style={styles.container} onPress={onPress}>
       {coverImage ? (
         <Image source={{ uri: coverImage }} style={styles.cover} />
       ) : (
@@ -34,7 +30,7 @@ export const RecentlyPlayedCard: React.FC<RecentlyPlayedCardProps> = ({
       <Text style={styles.artist} numberOfLines={1}>
         {artist}
       </Text>
-    </TouchableOpacity>
+    </Pressable>
   );
 };
 

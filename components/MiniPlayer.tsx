@@ -2,10 +2,9 @@ import { AppColors } from "@/constants/theme";
 import useAudioContext from "@/hooks/store/audioContext";
 import useFavourite from "@/hooks/store/favourite";
 import { Ionicons } from "@expo/vector-icons";
-import { useAudioPlayer } from "expo-audio";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
-import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 
 interface MiniPlayerProps {
   showHeart?: boolean;
@@ -21,7 +20,7 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
   const song = useAudioContext((state) => state.song);
   const audio = useAudioContext((state) => state.audio);
   const isFavorite = useFavourite((state) =>
-    state.songs.find((song) => song?.id === song?.id),
+    state.songs.find((favSong) => favSong?.id === song?.id),
   );
   const [currentIndex, setCurrentIndex] = useState(0);
   const favouriteToggle = useFavourite((state) => state.toggleSong);
@@ -58,10 +57,9 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
     return null;
   }
   return (
-    <TouchableOpacity
+    <Pressable
       style={[styles.container, { backgroundColor: bgColor }]}
       onPress={() => router.push("/playing")}
-      activeOpacity={0.9}
     >
       <View style={styles.leftSection}>
         {song.cover ? (
@@ -76,7 +74,11 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
           </View>
         )}
         <View style={styles.textContainer}>
-          <Text style={[styles.title, { color: textColor }]} numberOfLines={1} ellipsizeMode="tail">
+          <Text
+            style={[styles.title, { color: textColor }]}
+            numberOfLines={1}
+            ellipsizeMode="tail"
+          >
             {song.title}
           </Text>
           <Text
@@ -90,7 +92,7 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
 
       <View style={styles.controls}>
         {showHeart && (
-          <TouchableOpacity
+          <Pressable
             style={styles.controlButton}
             onPress={() => favouriteToggle(song)}
           >
@@ -101,24 +103,24 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
                 isFavorite ? AppColors.accentCyan : AppColors.textSecondary
               }
             />
-          </TouchableOpacity>
+          </Pressable>
         )}
-        <TouchableOpacity style={styles.controlButton} onPress={onPlayPause}>
+        <Pressable style={styles.controlButton} onPress={onPlayPause}>
           <Ionicons
             name={isPlaying ? "pause" : "play"}
             size={24}
             color={lightTheme ? AppColors.accentCyan : AppColors.textPrimary}
           />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.controlButton} onPress={onNext}>
+        </Pressable>
+        <Pressable style={styles.controlButton} onPress={onNext}>
           <Ionicons
             name="play-skip-forward"
             size={22}
             color={lightTheme ? AppColors.textLight : AppColors.textPrimary}
           />
-        </TouchableOpacity>
+        </Pressable>
       </View>
-    </TouchableOpacity>
+    </Pressable>
   );
 };
 

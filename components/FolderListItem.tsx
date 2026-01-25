@@ -1,7 +1,7 @@
 import { AppColors } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 interface FolderListItemProps {
   name: string;
@@ -15,11 +15,7 @@ export const FolderListItem: React.FC<FolderListItemProps> = ({
   onMenuPress,
 }) => {
   return (
-    <TouchableOpacity
-      style={styles.container}
-      onPress={onPress}
-      activeOpacity={0.7}
-    >
+    <Pressable style={styles.container} onPress={onPress}>
       <View style={styles.iconContainer}>
         <Ionicons name="folder" size={28} color={AppColors.accentPink} />
       </View>
@@ -28,17 +24,16 @@ export const FolderListItem: React.FC<FolderListItemProps> = ({
         <Text style={styles.name} numberOfLines={1}>
           {name}
         </Text>
-        
       </View>
 
-      <TouchableOpacity style={styles.menuButton} onPress={onMenuPress}>
+      <Pressable style={styles.menuButton} onPress={onMenuPress}>
         <Ionicons
           name="ellipsis-vertical"
           size={20}
           color={AppColors.textSecondary}
         />
-      </TouchableOpacity>
-    </TouchableOpacity>
+      </Pressable>
+    </Pressable>
   );
 };
 

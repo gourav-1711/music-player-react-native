@@ -1,12 +1,6 @@
 import { AppColors } from "@/constants/theme";
 import React from "react";
-import {
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 interface Tab {
   id: string;
@@ -44,7 +38,7 @@ export const TabFilter: React.FC<TabFilterProps> = ({
 
         if (isChip) {
           return (
-            <TouchableOpacity
+            <Pressable
               key={tab.id}
               style={[
                 styles.chipTab,
@@ -67,15 +61,16 @@ export const TabFilter: React.FC<TabFilterProps> = ({
               >
                 {tab.label}
               </Text>
-            </TouchableOpacity>
+            </Pressable>
           );
         }
 
         return (
-          <TouchableOpacity
+          <Pressable
             key={tab.id}
             style={styles.underlineTab}
             onPress={() => onTabChange(tab.id)}
+            disabled={isActive}
           >
             <Text
               style={[
@@ -87,7 +82,7 @@ export const TabFilter: React.FC<TabFilterProps> = ({
               {tab.label}
             </Text>
             {isActive && <View style={styles.underline} />}
-          </TouchableOpacity>
+          </Pressable>
         );
       })}
     </ScrollView>
@@ -97,13 +92,13 @@ export const TabFilter: React.FC<TabFilterProps> = ({
 const styles = StyleSheet.create({
   container: {
     paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingVertical: 4,
     gap: 12,
     height: 50,
     flexGrow: 1,
   },
   scrollView: {
-    maxHeight: 50,
+    maxHeight: 60,
   },
   // Chip variant
   chipTab: {

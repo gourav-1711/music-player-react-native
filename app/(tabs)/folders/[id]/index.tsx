@@ -5,16 +5,16 @@ import { AppColors } from "@/constants/theme";
 import { Song } from "@/constants/types";
 import useAudioContext from "@/hooks/store/audioContext";
 import { Ionicons } from "@expo/vector-icons";
+import { FlashList } from "@shopify/flash-list";
 import * as MediaLibrary from "expo-media-library";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  ScrollView,
+  Pressable,
   StyleSheet,
   Text,
   TextInput,
-  TouchableOpacity,
   View,
 } from "react-native";
 
@@ -102,10 +102,6 @@ export default function FolderDetailScreen() {
     router.push("/(tabs)/playing");
   };
 
-  const handleMiniPlayerPress = () => {
-    router.push("/(tabs)/playing");
-  };
-
   const handlePlayAll = () => {
     if (audioFiles.length > 0) {
       const songs: Song[] = audioFiles.map((asset) => ({
@@ -159,29 +155,19 @@ export default function FolderDetailScreen() {
                 <Ionicons name="close" size={24} color={AppColors.textPrimary} />
               </TouchableOpacity>
             </View> */}
-          <TextInput
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            style={{
-              padding: 16,
-              backgroundColor: AppColors.backgroundDark,
-              color: AppColors.textPrimary,
-              borderWidth: 1,
-              borderColor: AppColors.backgroundCardLight,
-              borderRadius: 8,
-              margin: 1,
-            }}
-            placeholder="Search"
+          <SearchInput
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
           />
         </View>
       )}
 
       {/* Action Buttons */}
       <View style={styles.actionButtons}>
-        <TouchableOpacity style={styles.playAllButton} onPress={handlePlayAll}>
+        <Pressable style={styles.playAllButton} onPress={handlePlayAll}>
           <Ionicons name="play" size={18} color={AppColors.backgroundDark} />
           <Text style={styles.playAllText}>Play All</Text>
-        </TouchableOpacity>
+        </Pressable>
       </View>
 
       {/* Song Count */}
@@ -210,27 +196,28 @@ export default function FolderDetailScreen() {
           </Text>
         </View>
       ) : (
-        <ScrollView
-          style={styles.scrollView}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 140 }}
-        >
-          {SONGS.map((file) => {
-            const isActive = currentSong?.id === file.id;
-            return (
-              <SongListItem
-                key={file.id}
-                title={file.filename.replace(/\.[^/.]+$/, "")}
-                artist="Unknown Artist"
-                duration={formatDuration(file.duration)}
-                isPlaying={isActive && isPlaying}
-                isActive={isActive}
-                onPress={() => handleSongPress(file)}
-                onMenuPress={() => {}}
-              />
-            );
-          })}
-        </ScrollView>
+        <View style={styles.listContainer}>
+          <FlashList
+            data={SONGS}
+            keyExtractor={(item) => item.id}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ paddingBottom: 140 }}
+            renderItem={({ item: file }) => {
+              const isActive = currentSong?.id === file.id;
+              return (
+                <SongListItem
+                  title={file.filename.replace(/\.[^/.]+$/, "")}
+                  artist="Unknown Artist"
+                  duration={formatDuration(file.duration)}
+                  isPlaying={isActive && isPlaying}
+                  isActive={isActive}
+                  onPress={() => handleSongPress(file)}
+                  onMenuPress={() => {}}
+                />
+              );
+            }}
+          />
+        </View>
       )}
 
       {/* Mini Player */}
@@ -293,6 +280,9 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
   },
+  listContainer: {
+    flex: 1,
+  },
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
@@ -328,3 +318,28 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
   },
 });
+
+export function SearchInput({
+  searchQuery,
+  setSearchQuery,
+}: {
+  searchQuery: string;
+  setSearchQuery: React.Dispatch<React.SetStateAction<string>>;
+}) {
+  return (
+    <TextInput
+      value={searchQuery}
+      onChangeText={setSearchQuery}
+      style={{
+        padding: 16,
+        backgroundColor: AppColors.backgroundDark,
+        color: AppColors.textPrimary,
+        borderWidth: 1,
+        borderColor: AppColors.backgroundCardLight,
+        borderRadius: 8,
+        margin: 1,
+      }}
+      placeholder="Search"
+    />
+  );
+}

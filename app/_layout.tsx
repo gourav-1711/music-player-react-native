@@ -12,6 +12,7 @@ import useHistory from "@/hooks/store/history";
 import usePlaylist from "@/hooks/store/playlist";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useEffect } from "react";
+import { PaperProvider } from "react-native-paper";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 // import * as NavigationBar from 'expo-navigation-bar';
 
@@ -36,14 +37,16 @@ export default function RootLayout() {
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
       <SafeAreaProvider>
-        <Stack>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen
-            name="modal"
-            options={{ presentation: "modal", title: "Modal" }}
-          />
-        </Stack>
-        <StatusBar style="auto" hidden={true} />
+        <PaperProvider>
+          <Stack>
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen
+              name="modal"
+              options={{ presentation: "modal", title: "Modal" }}
+            />
+          </Stack>
+          <StatusBar style="auto" hidden={true} />
+        </PaperProvider>
       </SafeAreaProvider>
     </ThemeProvider>
   );

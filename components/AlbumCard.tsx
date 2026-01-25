@@ -3,9 +3,9 @@ import React from "react";
 import {
   Dimensions,
   Image,
+  Pressable,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from "react-native";
 
@@ -26,11 +26,7 @@ export const AlbumCard: React.FC<AlbumCardProps> = ({
   onPress,
 }) => {
   return (
-    <TouchableOpacity
-      style={styles.container}
-      onPress={onPress}
-      activeOpacity={0.8}
-    >
+    <Pressable style={styles.container} onPress={onPress}>
       {coverImage ? (
         <Image source={{ uri: coverImage }} style={styles.cover} />
       ) : (
@@ -44,7 +40,7 @@ export const AlbumCard: React.FC<AlbumCardProps> = ({
       <Text style={styles.artist} numberOfLines={1}>
         {artist}
       </Text>
-    </TouchableOpacity>
+    </Pressable>
   );
 };
 

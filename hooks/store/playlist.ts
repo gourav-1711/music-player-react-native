@@ -1,7 +1,7 @@
-import { PlaylistObj, Song } from "@/constants/types";
+import { PlaylistObj } from "@/constants/types";
 import { create } from "zustand";
 import { getData, storeData } from "../data";
-
+import { Song } from "@/constants/types";
 type playlistState = {
   playlists: PlaylistObj[];
   createPlaylist: (playlist: PlaylistObj) => void;
@@ -13,7 +13,7 @@ type playlistState = {
 
 const KEY = "playlist";
 
-const usePlaylist = create<playlistState>((set , get) => ({
+const usePlaylist = create<playlistState>((set, get) => ({
   playlists: [
     {
       id: "123",
@@ -21,10 +21,13 @@ const usePlaylist = create<playlistState>((set , get) => ({
       songs: [],
     },
   ],
-  createPlaylist: (playlist: PlaylistObj) =>
-    set((state) => ({
-      playlists: [playlist, ...state.playlists],
-    })),
+  createPlaylist: (playlist: PlaylistObj) => {
+    const newPlaylists = [playlist, ...get().playlists];
+    set(() => ({
+      playlists: newPlaylists,
+    }));
+    storeData(newPlaylists, KEY);
+  },
   deletePlaylist: (id) => {
     set((state) => {
       const newPlaylists = state.playlists.filter(
@@ -43,6 +46,7 @@ const usePlaylist = create<playlistState>((set , get) => ({
       playlist.songs.some((song) => song?.id === songId),
     );
   },
+  
   loadData: () => {
     getData<PlaylistObj[]>(KEY).then((playlists) => {
       if (playlists && playlists.length > 0) {

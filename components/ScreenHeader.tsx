@@ -1,7 +1,7 @@
 import { AppColors } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 interface ScreenHeaderProps {
@@ -34,9 +34,9 @@ export const ScreenHeader: React.FC<ScreenHeaderProps> = ({
     <View style={[styles.container, { paddingTop: insets.top + 12 }]}>
       <View style={styles.leftSection}>
         {showBackButton && (
-          <TouchableOpacity style={styles.backButton} onPress={onBackPress}>
+          <Pressable style={styles.backButton} onPress={onBackPress}>
             <Ionicons name="chevron-back" size={28} color={textColor} />
-          </TouchableOpacity>
+          </Pressable>
         )}
         {titleAlign === "left" && (
           <Text style={[styles.title, { color: textColor }]}>{title}</Text>
@@ -50,7 +50,7 @@ export const ScreenHeader: React.FC<ScreenHeaderProps> = ({
       <View style={styles.rightSection}>
         {rightComponent}
         {rightActions.map((action, index) => (
-          <TouchableOpacity
+          <Pressable
             key={index}
             style={styles.actionButton}
             onPress={action.onPress}
@@ -60,7 +60,7 @@ export const ScreenHeader: React.FC<ScreenHeaderProps> = ({
               size={24}
               color={action.color || textColor}
             />
-          </TouchableOpacity>
+          </Pressable>
         ))}
       </View>
     </View>
