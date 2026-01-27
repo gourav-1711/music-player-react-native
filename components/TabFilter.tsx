@@ -1,6 +1,6 @@
 import { AppColors } from "@/constants/theme";
-import React from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import React, { useCallback } from "react";
+import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 
 interface Tab {
   id: string;
@@ -23,69 +23,73 @@ export const TabFilter: React.FC<TabFilterProps> = ({
   lightTheme = false,
 }) => {
   const isChip = variant === "chip";
-  const textColor = lightTheme ? AppColors.textLight : AppColors.textPrimary;
   const inactiveColor = lightTheme ? "#888" : AppColors.textSecondary;
 
-  return (
-    <ScrollView
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      contentContainerStyle={styles.container}
-      style={styles.scrollView}
-    >
-      {tabs.map((tab) => {
-        const isActive = tab.id === activeTabId;
+  // Memoize render function for FlatList
+  const renderTab = useCallback(
+    ({ item: tab }: { item: (typeof tabs)[0] }) => {
+      const isActive = tab.id === activeTabId;
 
-        if (isChip) {
-          return (
-            <Pressable
-              key={tab.id}
-              style={[
-                styles.chipTab,
-                isActive && styles.chipTabActive,
-                lightTheme && isActive && styles.chipTabActiveLight,
-              ]}
-              onPress={() => onTabChange(tab.id)}
-            >
-              <Text
-                style={[
-                  styles.chipText,
-                  {
-                    color: isActive
-                      ? lightTheme
-                        ? AppColors.textLight
-                        : AppColors.textPrimary
-                      : inactiveColor,
-                  },
-                ]}
-              >
-                {tab.label}
-              </Text>
-            </Pressable>
-          );
-        }
-
+      if (isChip) {
         return (
           <Pressable
-            key={tab.id}
-            style={styles.underlineTab}
+            style={[
+              styles.chipTab,
+              isActive && styles.chipTabActive,
+              lightTheme && isActive && styles.chipTabActiveLight,
+            ]}
             onPress={() => onTabChange(tab.id)}
-            disabled={isActive}
           >
             <Text
               style={[
-                styles.underlineText,
-                { color: isActive ? AppColors.accentCyan : inactiveColor },
-                isActive && styles.underlineTextActive,
+                styles.chipText,
+                {
+                  color: isActive
+                    ? lightTheme
+                      ? AppColors.textLight
+                      : AppColors.textPrimary
+                    : inactiveColor,
+                },
               ]}
             >
               {tab.label}
             </Text>
-            {isActive && <View style={styles.underline} />}
           </Pressable>
         );
-      })}
-    </ScrollView>
+      }
+
+      return (
+        <Pressable
+          style={styles.underlineTab}
+          onPress={() => onTabChange(tab.id)}
+          disabled={isActive}
+        >
+          <Text
+            style={[
+              styles.underlineText,
+              { color: isActive ? AppColors.accentCyan : inactiveColor },
+              isActive && styles.underlineTextActive,
+            ]}
+          >
+            {tab.label}
+          </Text>
+          {isActive && <View style={styles.underline} />}
+        </Pressable>
+      );
+    },
+    [activeTabId, isChip, lightTheme, inactiveColor, onTabChange],
+  );
+
+  return (
+    <FlatList
+      data={tabs}
+      renderItem={renderTab}
+      keyExtractor={(item) => item.id}
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      contentContainerStyle={styles.container}
+      style={styles.scrollView}
+    />
   );
 };
 

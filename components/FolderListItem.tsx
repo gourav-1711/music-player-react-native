@@ -9,7 +9,7 @@ interface FolderListItemProps {
   onMenuPress?: () => void;
 }
 
-export const FolderListItem: React.FC<FolderListItemProps> = ({
+const FolderListItemComponent: React.FC<FolderListItemProps> = ({
   name,
   onPress,
   onMenuPress,
@@ -70,3 +70,7 @@ const styles = StyleSheet.create({
     padding: 8,
   },
 });
+
+// Memoize to prevent re-renders in folder lists
+export const FolderListItem = React.memo(FolderListItemComponent);
+FolderListItem.displayName = "FolderListItem";

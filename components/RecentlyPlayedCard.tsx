@@ -9,7 +9,7 @@ interface RecentlyPlayedCardProps {
   onPress: () => void;
 }
 
-export const RecentlyPlayedCard: React.FC<RecentlyPlayedCardProps> = ({
+const RecentlyPlayedCardComponent: React.FC<RecentlyPlayedCardProps> = ({
   title,
   artist,
   coverImage,
@@ -64,3 +64,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
 });
+
+// Memoize to prevent re-renders in horizontal list
+export const RecentlyPlayedCard = React.memo(RecentlyPlayedCardComponent);
+RecentlyPlayedCard.displayName = "RecentlyPlayedCard";

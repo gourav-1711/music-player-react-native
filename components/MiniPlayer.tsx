@@ -3,7 +3,7 @@ import useAudioContext from "@/hooks/store/audioContext";
 import useFavourite from "@/hooks/store/favourite";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 
 interface MiniPlayerProps {
@@ -11,7 +11,7 @@ interface MiniPlayerProps {
   lightTheme?: boolean;
 }
 
-export const MiniPlayer: React.FC<MiniPlayerProps> = ({
+const MiniPlayerComponent: React.FC<MiniPlayerProps> = ({
   showHeart = false,
   lightTheme = false,
 }) => {
@@ -28,11 +28,19 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
   const togglePlayPause = useAudioContext((state) => state.setIsPlaying);
   const playlist = useAudioContext((state) => state.playlist);
   const setSong = useAudioContext((state) => state.setSong);
-  const bgColor = lightTheme ? "#E8E8F0" : "#1A1A1A";
-  const textColor = lightTheme ? AppColors.textLight : AppColors.textPrimary;
-  const subtextColor = lightTheme ? "#666" : AppColors.textSecondary;
 
-  const onNext = () => {
+  // Memoize colors to prevent re-computation
+  const colors = useMemo(
+    () => ({
+      bg: lightTheme ? "#E8E8F0" : "#1A1A1A",
+      text: lightTheme ? AppColors.textLight : AppColors.textPrimary,
+      subtext: lightTheme ? "#666" : AppColors.textSecondary,
+    }),
+    [lightTheme],
+  );
+
+  // Memoize handlers to prevent re-creating functions
+  const onNext = useCallback(() => {
     if (!playlist) return;
     if (currentIndex === playlist.length - 1) {
       setCurrentIndex(0);
@@ -41,9 +49,9 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
     }
     setCurrentIndex((prev) => prev + 1);
     setSong(playlist[currentIndex + 1]);
-  };
+  }, [playlist, currentIndex, setSong]);
 
-  const onPlayPause = () => {
+  const onPlayPause = useCallback(() => {
     const newIsPlaying = !isPlaying;
     togglePlayPause(newIsPlaying); // Update the state
     if (newIsPlaying) {
@@ -51,14 +59,14 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
     } else {
       audio?.pause();
     }
-  };
+  }, [isPlaying, togglePlayPause, audio]);
 
   if (!song) {
     return null;
   }
   return (
     <Pressable
-      style={[styles.container, { backgroundColor: bgColor }]}
+      style={[styles.container, { backgroundColor: colors.bg }]}
       onPress={() => router.push("/playing")}
     >
       <View style={styles.leftSection}>
@@ -75,14 +83,14 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
         )}
         <View style={styles.textContainer}>
           <Text
-            style={[styles.title, { color: textColor }]}
+            style={[styles.title, { color: colors.text }]}
             numberOfLines={1}
             ellipsizeMode="tail"
           >
             {song.title}
           </Text>
           <Text
-            style={[styles.artist, { color: subtextColor }]}
+            style={[styles.artist, { color: colors.subtext }]}
             numberOfLines={1}
           >
             {song.artist ?? "Unknown Artist"}
@@ -171,3 +179,17 @@ const styles = StyleSheet.create({
     padding: 8,
   },
 });
+
+// Memoize component to prevent unnecessary re-renders
+export const MiniPlayer = React.memo(
+  MiniPlayerComponent,
+  (prevProps, nextProps) => {
+    // Custom comparison for MiniPlayer props
+    return (
+      prevProps.showHeart === nextProps.showHeart &&
+      prevProps.lightTheme === nextProps.lightTheme
+    );
+  },
+);
+
+MiniPlayer.displayName = "MiniPlayer";

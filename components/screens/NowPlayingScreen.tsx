@@ -1,10 +1,10 @@
-import { WaveformProgress } from "@/components/WaveformProgress";
 import { AppColors } from "@/constants/theme";
 import useAudioContext from "@/hooks/store/audioContext";
 import useFavourite from "@/hooks/store/favourite";
 import { Ionicons } from "@expo/vector-icons";
 import { useAudioPlayer } from "expo-audio";
-import React, { useEffect, useState } from "react";
+import { useRouter } from "expo-router";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   Dimensions,
   Image,
@@ -13,7 +13,10 @@ import {
   Text,
   View,
 } from "react-native";
+import { Slider } from "react-native-awesome-slider";
+import { useSharedValue } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { SongActionsMenu } from "../SongActionsMenu";
 const { width } = Dimensions.get("window");
 const ARTWORK_SIZE = width - 64;
 
@@ -38,6 +41,12 @@ export const NowPlayingScreen = () => {
   const [repeat, setRepeat] = useState(false);
   const setAudioPlayer = useAudioContext((state) => state.setAudio);
   const player = useAudioPlayer(song?.url);
+  const router = useRouter();
+
+  // Slider values
+  const progress = useSharedValue(0);
+  const min = useSharedValue(0);
+  const max = useSharedValue(1);
 
   useEffect(() => {
     if (player && song && isPlaying) {
@@ -103,20 +112,30 @@ export const NowPlayingScreen = () => {
   };
 
   const onClose = () => {
-    // TODO: Implement close logic
+    router.back();
   };
 
-  const onMenuPress = () => {
-    // TODO: Implement menu press logic
+  // Format time in mm:ss
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
   const onPlayBackStatusUpdate = (status: any) => {
-    console.log(status);
+    const currentTime = player?.currentTime || 0;
+    const duration = player?.duration || 1;
+
     setTime({
-      current: player.currentTime,
-      total: player.duration,
-      progress: player.currentTime / player.duration,
+      current: currentTime,
+      total: duration,
+      progress: currentTime / duration,
     });
+
+    // Update slider progress
+    progress.value = currentTime;
+    max.value = duration;
+
     if (status.didJustFinish) {
       if (shuffle) {
         const randomIndex = Math.floor(Math.random() * playlist.length);
@@ -130,6 +149,16 @@ export const NowPlayingScreen = () => {
     }
   };
 
+  // Handle slider seek
+  const handleSliderChange = useCallback(
+    (value: number) => {
+      if (player) {
+        player.seekTo(value);
+      }
+    },
+    [player],
+  );
+
   return (
     <View style={[styles.container, { paddingTop: insets.top + 12 }]}>
       {/* Header */}
@@ -141,13 +170,7 @@ export const NowPlayingScreen = () => {
             color={AppColors.textPrimary}
           />
         </Pressable>
-        <Pressable style={styles.headerButton} onPress={onMenuPress}>
-          <Ionicons
-            name="ellipsis-vertical"
-            size={24}
-            color={AppColors.textPrimary}
-          />
-        </Pressable>
+        <SongActionsMenu song={song} menuIconColor={"#e3e3e3ff"} />
       </View>
 
       {/* Album Artwork */}
@@ -181,13 +204,28 @@ export const NowPlayingScreen = () => {
         <Text style={styles.artistName}>{song?.artist}</Text>
       </View>
 
-      {/* Waveform Progress */}
+      {/* Progress Slider */}
       <View style={styles.progressContainer}>
-        <WaveformProgress
-          currentTime={time.current}
-          totalTime={time.total}
-          progress={time.progress}
-        />
+        <View style={styles.sliderContainer}>
+          <Slider
+            style={styles.slider}
+            progress={progress}
+            minimumValue={min}
+            maximumValue={max}
+            onSlidingComplete={handleSliderChange}
+            theme={{
+              minimumTrackTintColor: AppColors.accentCyan,
+              maximumTrackTintColor: AppColors.textSecondary,
+              bubbleBackgroundColor: AppColors.accentCyan,
+            }}
+            thumbWidth={14}
+            containerStyle={{ borderRadius: 4 }}
+          />
+        </View>
+        <View style={styles.timeContainer}>
+          <Text style={styles.timeText}>{formatTime(time.current)}</Text>
+          <Text style={styles.timeText}>{formatTime(time.total)}</Text>
+        </View>
       </View>
 
       {/* Controls */}
@@ -325,6 +363,23 @@ const styles = StyleSheet.create({
   },
   progressContainer: {
     marginBottom: 32,
+  },
+  sliderContainer: {
+    paddingHorizontal: 32,
+    marginBottom: 12,
+  },
+  slider: {
+    width: "100%",
+    height: 40,
+  },
+  timeContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingHorizontal: 32,
+  },
+  timeText: {
+    fontSize: 12,
+    color: AppColors.textSecondary,
   },
   controls: {
     flexDirection: "row",

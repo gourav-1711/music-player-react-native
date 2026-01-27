@@ -67,7 +67,6 @@ const SongList: React.FC<SongListProps> = ({
         isPlaying={isActive && isPlaying}
         isActive={isActive}
         onPress={() => handleSongPress(file as Song)}
-        onMenuPress={() => {}}
         song={file}
       />
     );

@@ -19,7 +19,7 @@ interface AlbumCardProps {
   onPress?: () => void;
 }
 
-export const AlbumCard: React.FC<AlbumCardProps> = ({
+const AlbumCardComponent: React.FC<AlbumCardProps> = ({
   title,
   artist,
   coverImage,
@@ -74,3 +74,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
 });
+
+// Memoize to prevent re-renders in grid lists
+export const AlbumCard = React.memo(AlbumCardComponent);
+AlbumCard.displayName = "AlbumCard";
