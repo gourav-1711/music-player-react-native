@@ -30,12 +30,10 @@ const TABS = [
 
 interface LibraryScreenProps {
   onSettingsPress?: () => void;
-  onSongPress?: (song: Song) => void;
 }
 
 export const LibraryScreen: React.FC<LibraryScreenProps> = ({
   onSettingsPress,
-  onSongPress,
 }) => {
   const insets = useSafeAreaInsets();
   const [activeTab, setActiveTab] = useState("songs");
@@ -70,7 +68,8 @@ export const LibraryScreen: React.FC<LibraryScreenProps> = ({
       setSongs(songs);
     });
   };
-
+  // console.log(songs);
+  
   useEffect(() => {
     getSongs();
   }, []);

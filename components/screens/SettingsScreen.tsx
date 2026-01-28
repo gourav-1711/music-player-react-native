@@ -1,32 +1,70 @@
+import { ColorChooser } from "@/components/ColorChooser";
 import { SettingsListItem } from "@/components/SettingsListItem";
 import { AppColors } from "@/constants/theme";
+import { useSettingsStore } from "@/hooks/store/settingsStore";
+import useSongMetadata from "@/hooks/store/songMetadata";
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import React, { useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+  Alert,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
+import { Modal, Portal } from "react-native-paper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 interface SettingsScreenProps {
   onBackPress?: () => void;
-  onScanStorage?: () => void;
-  onEqualizerPress?: () => void;
-  onAccentColorPress?: () => void;
-  onAudioQualityPress?: () => void;
-  onSleepTimerPress?: () => void;
 }
 
 export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   onBackPress,
-  onScanStorage,
-  onEqualizerPress,
-  onAccentColorPress,
-  onAudioQualityPress,
-  onSleepTimerPress,
 }) => {
   const insets = useSafeAreaInsets();
-  const [amoledMode, setAmoledMode] = useState(true);
-  const [gaplessPlayback, setGaplessPlayback] = useState(false);
-  const [showHiddenFolders, setShowHiddenFolders] = useState(false);
+
+  // Store
+  const {
+    accentColor,
+    setAccentColor,
+    accentPurple,
+    setAccentPurple,
+    accentPink,
+    setAccentPink,
+    alwaysShuffle,
+    toggleAlwaysShuffle,
+    alwaysRepeat,
+    toggleAlwaysRepeat,
+    autoplayNext,
+    toggleAutoplayNext,
+    showRandomCoverArt,
+    toggleShowRandomCoverArt,
+  } = useSettingsStore();
+
+  const clearMetadata = useSongMetadata((state) => state.clearAllMetadata);
+  const [activeColorPicker, setActiveColorPicker] = useState<
+    "cyan" | "purple" | "pink" | null
+  >(null);
+
+  const handleClearMetadata = () => {
+    Alert.alert(
+      "Clear Metadata",
+      "Are you sure you want to clear all custom cover arts and metadata? This action cannot be undone.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Clear",
+          style: "destructive",
+          onPress: async () => {
+            await clearMetadata();
+            Alert.alert("Success", "Metadata cleared successfully");
+          },
+        },
+      ],
+    );
+  };
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -48,86 +86,83 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
-        {/* Scan Storage Banner */}
-        <Pressable style={styles.scanBanner} onPress={onScanStorage}>
-          <LinearGradient
-            colors={["#00F5D4", "#00D4AA"]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.scanBannerGradient}
-          >
-            <View style={styles.scanIconContainer}>
-              <Ionicons
-                name="cube-outline"
-                size={24}
-                color={AppColors.textLight}
-              />
-            </View>
-            <View style={styles.scanTextContainer}>
-              <Text style={styles.scanTitle}>Scan Storage</Text>
-              <Text style={styles.scanDescription}>Last scan: 2 days ago</Text>
-            </View>
-            <Ionicons
-              name="chevron-forward"
-              size={24}
-              color={AppColors.textLight}
-            />
-          </LinearGradient>
-        </Pressable>
-
         {/* Appearance Section */}
         <Text style={styles.sectionTitle}>APPEARANCE</Text>
         <View style={styles.section}>
           <SettingsListItem
-            icon="moon"
-            iconColor="#A855F7"
-            iconBgColor="#2A1A3A"
-            label="AMOLED Mode"
-            description="Pure black background"
-            type="toggle"
-            value={amoledMode}
-            onValueChange={setAmoledMode}
+            icon="color-palette"
+            iconColor={accentColor}
+            iconBgColor="#1A2A2A"
+            label="Primary Color"
+            description="Main app theme color"
+            type="navigation"
+            value={accentColor}
+            onPress={() => setActiveColorPicker("cyan")}
           />
           <SettingsListItem
-            icon="color-palette"
-            iconColor={AppColors.accentCyan}
-            iconBgColor="#1A2A2A"
-            label="Accent Color"
+            icon="brush"
+            iconColor={accentPurple}
+            iconBgColor="#2A1A2A"
+            label="Secondary Color"
+            description="Used for play buttons"
             type="navigation"
-            value={AppColors.accentCyan}
-            onPress={onAccentColorPress}
+            value={accentPurple}
+            onPress={() => setActiveColorPicker("purple")}
+          />
+          <SettingsListItem
+            icon="heart"
+            iconColor={accentPink}
+            iconBgColor="#2A1A1A"
+            label="Tertiary Color"
+            description="Used for favorites"
+            type="navigation"
+            value={accentPink}
+            onPress={() => setActiveColorPicker("pink")}
+          />
+          <SettingsListItem
+            icon="images"
+            iconColor={AppColors.accentPink}
+            iconBgColor="#2A1A2A"
+            label="Show Random Cover Art"
+            description="Use random images for missing art"
+            type="toggle"
+            value={showRandomCoverArt}
+            onValueChange={toggleShowRandomCoverArt}
           />
         </View>
 
         {/* Playback Section */}
-        <Text style={styles.sectionTitle}>PLAYBACK</Text>
+        <Text style={styles.sectionTitle}>PLAYBACK BEHAVIOR</Text>
         <View style={styles.section}>
           <SettingsListItem
-            icon="bar-chart"
+            icon="shuffle"
+            iconColor="#A855F7"
+            iconBgColor="#2A1A3A"
+            label="Always Shuffle"
+            description="Shuffle automatically on start"
+            type="toggle"
+            value={alwaysShuffle}
+            onValueChange={toggleAlwaysShuffle}
+          />
+          <SettingsListItem
+            icon="repeat"
             iconColor="#22C55E"
             iconBgColor="#1A2A1A"
-            label="Audio Quality"
-            type="value"
-            value="High"
-            onPress={onAudioQualityPress}
-          />
-          <SettingsListItem
-            icon="pulse"
-            iconColor="#EF4444"
-            iconBgColor="#2A1A1A"
-            label="Gapless Playback"
+            label="Always Repeat Playing Song"
+            description="Repeat current song by default"
             type="toggle"
-            value={gaplessPlayback}
-            onValueChange={setGaplessPlayback}
+            value={alwaysRepeat}
+            onValueChange={toggleAlwaysRepeat}
           />
           <SettingsListItem
-            icon="timer-outline"
+            icon="play-skip-forward"
             iconColor="#3B82F6"
             iconBgColor="#1A1A2A"
-            label="Sleep Timer"
-            type="value"
-            value="Off"
-            onPress={onSleepTimerPress}
+            label="Autoplay Next Song"
+            description="Automatically play next track"
+            type="toggle"
+            value={autoplayNext}
+            onValueChange={toggleAutoplayNext}
           />
         </View>
 
@@ -135,16 +170,43 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
         <Text style={styles.sectionTitle}>LIBRARY</Text>
         <View style={styles.section}>
           <SettingsListItem
-            icon="folder-open"
-            iconColor={AppColors.accentPink}
-            iconBgColor="#2A1A2A"
-            label="Show Hidden Folders"
-            type="toggle"
-            value={showHiddenFolders}
-            onValueChange={setShowHiddenFolders}
+            icon="trash-bin"
+            iconColor="#EF4444"
+            iconBgColor="#2A1A1A"
+            label="Clear Metadata Cache"
+            description="Remove all custom cover arts"
+            type="value"
+            value=""
+            onPress={handleClearMetadata}
           />
         </View>
       </ScrollView>
+
+      {/* Color Picker Modal */}
+      <Portal>
+        <Modal
+          visible={!!activeColorPicker}
+          onDismiss={() => setActiveColorPicker(null)}
+          contentContainerStyle={styles.modalContent}
+        >
+          <ColorChooser
+            selectedColor={
+              activeColorPicker === "purple"
+                ? accentPurple
+                : activeColorPicker === "pink"
+                  ? accentPink
+                  : accentColor
+            }
+            onSelectColor={(color) => {
+              if (activeColorPicker === "purple") setAccentPurple(color);
+              else if (activeColorPicker === "pink") setAccentPink(color);
+              else setAccentColor(color);
+
+              setActiveColorPicker(null);
+            }}
+          />
+        </Modal>
+      </Portal>
     </View>
   );
 };
@@ -175,38 +237,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 100,
   },
-  scanBanner: {
-    marginBottom: 24,
-    borderRadius: 16,
-    overflow: "hidden",
-  },
-  scanBannerGradient: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 16,
-  },
-  scanIconContainer: {
-    width: 40,
-    height: 40,
-    backgroundColor: "rgba(0,0,0,0.2)",
-    borderRadius: 10,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  scanTextContainer: {
-    flex: 1,
-    marginLeft: 14,
-  },
-  scanTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: AppColors.textLight,
-  },
-  scanDescription: {
-    fontSize: 12,
-    color: "rgba(0,0,0,0.6)",
-    marginTop: 2,
-  },
   sectionTitle: {
     fontSize: 12,
     fontWeight: "600",
@@ -217,5 +247,11 @@ const styles = StyleSheet.create({
   },
   section: {
     marginBottom: 16,
+  },
+  modalContent: {
+    padding: 20,
+    margin: 20,
+    alignItems: "center",
+    justifyContent: "center",
   },
 });

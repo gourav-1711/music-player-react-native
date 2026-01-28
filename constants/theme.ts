@@ -1,11 +1,18 @@
+import { useSettingsStore } from "@/hooks/store/settingsStore";
 import { Platform } from "react-native";
 
 // Music Player App Colors
 export const AppColors = {
   // Primary accents
-  accentCyan: "#00F5D4",
-  accentPurple: "#A855F7",
-  accentPink: "#FF1493",
+  get accentCyan() {
+    return useSettingsStore.getState().accentColor;
+  },
+  get accentPurple() {
+    return useSettingsStore.getState().accentPurple;
+  },
+  get accentPink() {
+    return useSettingsStore.getState().accentPink;
+  },
 
   // Backgrounds
   backgroundDark: "#000000",

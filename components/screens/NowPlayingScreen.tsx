@@ -2,9 +2,8 @@ import { AppColors } from "@/constants/theme";
 import useAudioContext from "@/hooks/store/audioContext";
 import useFavourite from "@/hooks/store/favourite";
 import { Ionicons } from "@expo/vector-icons";
-import { useAudioPlayer } from "expo-audio";
 import { useRouter } from "expo-router";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect } from "react";
 import {
   Dimensions,
   Image,
@@ -13,34 +12,41 @@ import {
   Text,
   View,
 } from "react-native";
+import { AudioPro, AudioProState, useAudioPro } from "react-native-audio-pro";
 import { Slider } from "react-native-awesome-slider";
 import { useSharedValue } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+
 import { SongActionsMenu } from "../SongActionsMenu";
 const { width } = Dimensions.get("window");
 const ARTWORK_SIZE = width - 64;
 
 export const NowPlayingScreen = () => {
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const {
+    playlist,
+    song,
+    setIsPlaying,
+    shuffle,
+    repeat,
+    toggleShuffle,
+    toggleRepeat,
+    playNext,
+    playPrevious,
+  } = useAudioContext();
+
   const insets = useSafeAreaInsets();
-  const [time, setTime] = useState({
-    current: 0,
-    total: 0,
-    progress: 0,
-  });
-  const playlist = useAudioContext((state) => state.playlist) || [];
-  const song = useAudioContext((state) => state.song);
-  const setSong = useAudioContext((state) => state.setSong);
-  const togglePlayPause = useAudioContext((state) => state.setIsPlaying);
-  const isPlaying = useAudioContext((state) => state.isPlaying);
+
   const isFavorite = useFavourite((state) =>
     state.songs.find((favSong) => favSong?.id === song?.id),
   );
   const favouriteToggle = useFavourite((state) => state.toggleSong);
-  const [shuffle, setShuffle] = useState(false);
-  const [repeat, setRepeat] = useState(false);
-  const setAudioPlayer = useAudioContext((state) => state.setAudio);
-  const player = useAudioPlayer(song?.url);
+
+  // AudioPro hook for reactive state
+  const { state: audioState, position, duration } = useAudioPro();
+  const isPlaying =
+    audioState === AudioProState.PLAYING ||
+    audioState === AudioProState.LOADING;
+
   const router = useRouter();
 
   // Slider values
@@ -48,67 +54,20 @@ export const NowPlayingScreen = () => {
   const min = useSharedValue(0);
   const max = useSharedValue(1);
 
+  // Sync slider with audio position
   useEffect(() => {
-    if (player && song && isPlaying) {
-      player.play();
-      setTime({
-        current: player.currentTime,
-        total: player.duration,
-        progress: player.currentTime / player.duration,
-      });
-      player.addListener("playbackStatusUpdate", onPlayBackStatusUpdate);
-    }
-  }, [player, isPlaying]);
-
-  useEffect(() => {
-    setAudioPlayer(player);
-  }, [player]);
-
-  const onShuffle = () => {
-    setShuffle((prev) => {
-      if (!prev) setRepeat(false);
-      return !prev;
-    });
-  };
-
-  const onRepeat = () => {
-    setRepeat((prev) => {
-      if (!prev) setShuffle(false);
-      return !prev;
-    });
-  };
+    progress.value = position / 1000;
+    max.value = duration / 1000 || 1;
+  }, [position, duration]);
 
   const onPlayPause = () => {
-    togglePlayPause(!isPlaying);
-    if (player) {
-      if (isPlaying) {
-        player.pause();
-      } else {
-        player.play();
-      }
+    if (isPlaying) {
+      AudioPro.pause();
+      setIsPlaying(false);
+    } else {
+      AudioPro.resume();
+      setIsPlaying(true);
     }
-  };
-
-  const onPrevious = () => {
-    if (!playlist) return;
-    if (currentIndex === 0) {
-      setCurrentIndex(playlist.length - 1);
-      setSong(playlist[playlist.length - 1]);
-      return;
-    }
-    setCurrentIndex((prev) => prev - 1);
-    setSong(playlist[currentIndex - 1]);
-  };
-
-  const onNext = () => {
-    if (!playlist) return;
-    if (currentIndex === playlist.length - 1) {
-      setCurrentIndex(0);
-      setSong(playlist[0]);
-      return;
-    }
-    setCurrentIndex((prev) => prev + 1);
-    setSong(playlist[currentIndex + 1]);
   };
 
   const onClose = () => {
@@ -122,42 +81,10 @@ export const NowPlayingScreen = () => {
     return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
-  const onPlayBackStatusUpdate = (status: any) => {
-    const currentTime = player?.currentTime || 0;
-    const duration = player?.duration || 1;
-
-    setTime({
-      current: currentTime,
-      total: duration,
-      progress: currentTime / duration,
-    });
-
-    // Update slider progress
-    progress.value = currentTime;
-    max.value = duration;
-
-    if (status.didJustFinish) {
-      if (shuffle) {
-        const randomIndex = Math.floor(Math.random() * playlist.length);
-        setCurrentIndex(randomIndex);
-        setSong(playlist[randomIndex]);
-      } else if (repeat) {
-        player.seekTo(0);
-      } else {
-        onNext();
-      }
-    }
-  };
-
   // Handle slider seek
-  const handleSliderChange = useCallback(
-    (value: number) => {
-      if (player) {
-        player.seekTo(value);
-      }
-    },
-    [player],
-  );
+  const handleSliderChange = useCallback((value: number) => {
+    AudioPro.seekTo(value * 1000); // Convert s to ms
+  }, []);
 
   return (
     <View style={[styles.container, { paddingTop: insets.top + 12 }]}>
@@ -223,17 +150,17 @@ export const NowPlayingScreen = () => {
           />
         </View>
         <View style={styles.timeContainer}>
-          <Text style={styles.timeText}>{formatTime(time.current)}</Text>
-          <Text style={styles.timeText}>{formatTime(time.total)}</Text>
+          <Text style={styles.timeText}>{formatTime(position / 1000)}</Text>
+          <Text style={styles.timeText}>{formatTime(duration / 1000)}</Text>
         </View>
       </View>
 
       {/* Controls */}
       <View style={styles.controls}>
         <Pressable
-          disabled={!player || playlist.length < 1}
+          disabled={playlist.length < 1}
           style={styles.controlButton}
-          onPress={onShuffle}
+          onPress={toggleShuffle}
         >
           <Ionicons
             name="shuffle"
@@ -243,9 +170,9 @@ export const NowPlayingScreen = () => {
         </Pressable>
 
         <Pressable
-          disabled={!player || playlist.length < 1}
+          disabled={playlist.length < 1}
           style={styles.controlButton}
-          onPress={onPrevious}
+          onPress={playPrevious}
         >
           <Ionicons
             name="play-skip-back"
@@ -254,11 +181,7 @@ export const NowPlayingScreen = () => {
           />
         </Pressable>
 
-        <Pressable
-          disabled={!player}
-          style={styles.playButton}
-          onPress={onPlayPause}
-        >
+        <Pressable style={styles.playButton} onPress={onPlayPause}>
           <Ionicons
             name={isPlaying ? "pause" : "play"}
             size={32}
@@ -267,9 +190,9 @@ export const NowPlayingScreen = () => {
         </Pressable>
 
         <Pressable
-          disabled={!player || playlist.length < 1}
+          disabled={playlist.length < 1}
           style={styles.controlButton}
-          onPress={onNext}
+          onPress={() => playNext(true)}
         >
           <Ionicons
             name="play-skip-forward"
@@ -279,9 +202,9 @@ export const NowPlayingScreen = () => {
         </Pressable>
 
         <Pressable
-          disabled={!player || playlist.length < 1}
+          disabled={playlist.length < 1}
           style={styles.controlButton}
-          onPress={onRepeat}
+          onPress={toggleRepeat}
         >
           <Ionicons
             name="repeat"

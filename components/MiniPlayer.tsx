@@ -3,8 +3,9 @@ import useAudioContext from "@/hooks/store/audioContext";
 import useFavourite from "@/hooks/store/favourite";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useMemo } from "react";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { AudioPro } from "react-native-audio-pro";
 
 interface MiniPlayerProps {
   showHeart?: boolean;
@@ -18,16 +19,13 @@ const MiniPlayerComponent: React.FC<MiniPlayerProps> = ({
   const router = useRouter();
   // Get data from audio context
   const song = useAudioContext((state) => state.song);
-  const audio = useAudioContext((state) => state.audio);
   const isFavorite = useFavourite((state) =>
     state.songs.find((favSong) => favSong?.id === song?.id),
   );
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const favouriteToggle = useFavourite((state) => state.toggleSong);
-  const isPlaying = useAudioContext((state) => state.isPlaying);
+  const { playNext } = useAudioContext();
   const togglePlayPause = useAudioContext((state) => state.setIsPlaying);
-  const playlist = useAudioContext((state) => state.playlist);
-  const setSong = useAudioContext((state) => state.setSong);
+  const isPlaying = useAudioContext((state) => state.isPlaying);
+  const favouriteToggle = useFavourite((state) => state.toggleSong);
 
   // Memoize colors to prevent re-computation
   const colors = useMemo(
@@ -39,27 +37,15 @@ const MiniPlayerComponent: React.FC<MiniPlayerProps> = ({
     [lightTheme],
   );
 
-  // Memoize handlers to prevent re-creating functions
-  const onNext = useCallback(() => {
-    if (!playlist) return;
-    if (currentIndex === playlist.length - 1) {
-      setCurrentIndex(0);
-      setSong(playlist[0]);
-      return;
-    }
-    setCurrentIndex((prev) => prev + 1);
-    setSong(playlist[currentIndex + 1]);
-  }, [playlist, currentIndex, setSong]);
-
   const onPlayPause = useCallback(() => {
-    const newIsPlaying = !isPlaying;
-    togglePlayPause(newIsPlaying); // Update the state
-    if (newIsPlaying) {
-      audio?.play();
+    if (isPlaying) {
+      AudioPro.pause();
+      togglePlayPause(false);
     } else {
-      audio?.pause();
+      AudioPro.resume();
+      togglePlayPause(true);
     }
-  }, [isPlaying, togglePlayPause, audio]);
+  }, [isPlaying, togglePlayPause]);
 
   if (!song) {
     return null;
@@ -120,7 +106,7 @@ const MiniPlayerComponent: React.FC<MiniPlayerProps> = ({
             color={lightTheme ? AppColors.accentCyan : AppColors.textPrimary}
           />
         </Pressable>
-        <Pressable style={styles.controlButton} onPress={onNext}>
+        <Pressable style={styles.controlButton} onPress={() => playNext(true)}>
           <Ionicons
             name="play-skip-forward"
             size={22}

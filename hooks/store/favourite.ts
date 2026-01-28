@@ -15,7 +15,7 @@ const useFavourite = create<favouriteState>((set) => ({
   songs: [],
   loadSongs: () => {
     getData<Song[]>(KEY).then((songs) => {
-      set({ songs });
+      set({ songs: songs || [] });
     });
   },
   toggleSong: (song: Song) => {
@@ -32,8 +32,5 @@ const useFavourite = create<favouriteState>((set) => ({
     set({ songs: [] });
   },
 }));
-
-
-
 
 export default useFavourite;
