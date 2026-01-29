@@ -12,12 +12,12 @@ import {
 const { width } = Dimensions.get("window");
 const CARD_WIDTH = (width - 48) / 2;
 
-interface AlbumCardProps {
+type AlbumCardProps = {
   title: string;
   artist: string;
   coverImage?: string;
   onPress?: () => void;
-}
+};
 
 const AlbumCardComponent: React.FC<AlbumCardProps> = ({
   title,

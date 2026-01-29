@@ -2,33 +2,32 @@ import { AppColors } from "@/constants/theme";
 import React from "react";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 
+import { Song } from "@/constants/types";
+import useAudioContext from "@/hooks/store/audioContext";
+
 interface RecentlyPlayedCardProps {
-  title: string;
-  artist: string;
-  coverImage?: string;
-  onPress: () => void;
+  song: NonNullable<Song>;
 }
 
 const RecentlyPlayedCardComponent: React.FC<RecentlyPlayedCardProps> = ({
-  title,
-  artist,
-  coverImage,
-  onPress,
+  song,
 }) => {
+  const setSong = useAudioContext((state) => state.setSong);
+
   return (
-    <Pressable style={styles.container} onPress={onPress}>
-      {coverImage ? (
-        <Image source={{ uri: coverImage }} style={styles.cover} />
+    <Pressable style={styles.container} onPress={() => setSong(song)}>
+      {song.cover ? (
+        <Image source={{ uri: song.cover }} style={styles.cover} />
       ) : (
         <View style={[styles.cover, styles.placeholder]}>
           <Text style={styles.placeholderText}>🎵</Text>
         </View>
       )}
       <Text style={styles.title} numberOfLines={1}>
-        {title}
+        {song.title}
       </Text>
       <Text style={styles.artist} numberOfLines={1}>
-        {artist}
+        {song.artist || "Unknown Artist"}
       </Text>
     </Pressable>
   );

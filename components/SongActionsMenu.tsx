@@ -4,25 +4,25 @@ import usePlaylist from "@/hooks/store/playlist";
 import { useImagePicker } from "@/hooks/useImagePicker";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useCallback, useState } from "react";
-import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
-import { Checkbox, Menu, Modal, Portal } from "react-native-paper";
+import { Pressable, StyleSheet } from "react-native";
+import { Menu } from "react-native-paper";
+import PlaylistSelectionModal from "./PlaylistSelectionModal";
 
 interface SongActionsMenuProps {
   song?: Song;
   menuIconColor?: string;
 }
 
-const SongActionsMenuComponent: React.FC<SongActionsMenuProps> = ({
+export const SongActionsMenu: React.FC<SongActionsMenuProps> = ({
   song,
   menuIconColor = AppColors.textSecondary,
 }) => {
   const [menuVisible, setMenuVisible] = useState(false);
   const [playlistModalVisible, setPlaylistModalVisible] = useState(false);
-  const [selectedPlaylists, setSelectedPlaylists] = useState<string[]>([]);
 
   const playlists = usePlaylist((state) => state.playlists);
   const setPlaylists = usePlaylist((state) => state.setPlaylists);
-  
+
   const { pickImageForSong } = useImagePicker();
 
   const handleAddCoverImage = useCallback(async () => {
@@ -37,34 +37,28 @@ const SongActionsMenuComponent: React.FC<SongActionsMenuProps> = ({
     setPlaylistModalVisible(true);
   }, []);
 
-  const handlePlaylistToggle = useCallback((playlistId: string) => {
-    setSelectedPlaylists((prev) =>
-      prev.includes(playlistId)
-        ? prev.filter((id) => id !== playlistId)
-        : [...prev, playlistId],
-    );
-  }, []);
+  const handleConfirmAddToPlaylists = useCallback(
+    (selectedPlaylists: string[]) => {
+      if (!song) return;
 
-  const handleAddToPlaylists = useCallback(() => {
-    if (!song) return;
-
-    const updatedPlaylists = playlists.map((playlist) => {
-      if (selectedPlaylists.includes(playlist.id)) {
-        const songExists = playlist.songs.some((s) => s?.id === song.id);
-        if (!songExists) {
-          return {
-            ...playlist,
-            songs: [...playlist.songs, song],
-          };
+      const updatedPlaylists = playlists.map((playlist) => {
+        if (selectedPlaylists.includes(playlist.id)) {
+          const songExists = playlist.songs.some((s) => s?.id === song.id);
+          if (!songExists) {
+            return {
+              ...playlist,
+              songs: [...playlist.songs, song],
+            };
+          }
         }
-      }
-      return playlist;
-    });
+        return playlist;
+      });
 
-    setPlaylists(updatedPlaylists);
-    setSelectedPlaylists([]);
-    setPlaylistModalVisible(false);
-  }, [song, playlists, selectedPlaylists, setPlaylists]);
+      setPlaylists(updatedPlaylists);
+      setPlaylistModalVisible(false);
+    },
+    [song, playlists, setPlaylists],
+  );
 
   return (
     <>
@@ -74,9 +68,7 @@ const SongActionsMenuComponent: React.FC<SongActionsMenuProps> = ({
         anchor={
           <Pressable
             style={styles.menuButton}
-            onPress={() => {
-              setMenuVisible(true);
-            }}
+            onPress={() => setMenuVisible(true)}
           >
             <Ionicons
               name="ellipsis-vertical"
@@ -109,84 +101,23 @@ const SongActionsMenuComponent: React.FC<SongActionsMenuProps> = ({
         />
       </Menu>
 
-      <Portal>
-        <Modal
-          visible={playlistModalVisible}
-          onDismiss={() => {
-            setPlaylistModalVisible(false);
-            setSelectedPlaylists([]);
-          }}
-          contentContainerStyle={styles.playlistModalContainer}
-        >
-          <View style={styles.playlistModalContent}>
-            <View style={styles.playlistModalHeader}>
-              <Ionicons name="list" size={32} color={AppColors.accentCyan} />
-              <Text style={styles.playlistModalTitle}>Add to Playlist</Text>
-              <Text style={styles.playlistModalDescription}>
-                Select playlists to add this song to
-              </Text>
-            </View>
-
-            <FlatList
-              data={playlists}
-              style={styles.playlistList}
-              keyExtractor={(playlist) => playlist.id}
-              renderItem={({ item: playlist }) => (
-                <Pressable
-                  style={styles.playlistItem}
-                  onPress={() => handlePlaylistToggle(playlist.id)}
-                >
-                  <View style={styles.playlistItemContent}>
-                    <Text style={styles.playlistName}>{playlist.name}</Text>
-                    <Text style={styles.playlistSongCount}>
-                      {playlist.songs.length} songs
-                    </Text>
-                  </View>
-                  <Checkbox
-                    status={
-                      selectedPlaylists.includes(playlist.id)
-                        ? "checked"
-                        : "unchecked"
-                    }
-                    onPress={() => handlePlaylistToggle(playlist.id)}
-                    color={AppColors.accentCyan}
-                  />
-                </Pressable>
-              )}
-            />
-
-            <View style={styles.playlistModalActions}>
-              <Pressable
-                style={[styles.playlistModalButton, styles.cancelButton]}
-                onPress={() => {
-                  setPlaylistModalVisible(false);
-                  setSelectedPlaylists([]);
-                }}
-              >
-                <Text style={styles.cancelButtonText}>Cancel</Text>
-              </Pressable>
-
-              <Pressable
-                style={[styles.playlistModalButton, styles.addButton]}
-                disabled={selectedPlaylists.length === 0}
-                onPress={handleAddToPlaylists}
-              >
-                <Text style={styles.addButtonText}>
-                  Add to {selectedPlaylists.length} playlist
-                  {selectedPlaylists.length !== 1 ? "s" : ""}
-                </Text>
-              </Pressable>
-            </View>
-          </View>
-        </Modal>
-      </Portal>
+      <PlaylistSelectionModal
+        visible={playlistModalVisible}
+        onDismiss={() => setPlaylistModalVisible(false)}
+        onConfirm={handleConfirmAddToPlaylists}
+        playlists={playlists}
+        title="Add to Playlist"
+        description="Select playlists to add this song to"
+        confirmText="Add to Playlist"
+      />
     </>
   );
 };
 
 const styles = StyleSheet.create({
   menuButton: {
-    padding: 8,
+    padding: 12, // Increased padding for better touch target
+    zIndex: 10, // Ensure it sits above other elements
   },
   menuContent: {
     backgroundColor: AppColors.backgroundCard,
@@ -196,86 +127,4 @@ const styles = StyleSheet.create({
     color: AppColors.textPrimary,
     fontSize: 15,
   },
-  playlistModalContainer: {
-    backgroundColor: AppColors.backgroundCard,
-    marginHorizontal: 20,
-    borderRadius: 20,
-    padding: 24,
-    maxHeight: "80%",
-  },
-  playlistModalContent: {
-    gap: 20,
-  },
-  playlistModalHeader: {
-    alignItems: "center",
-    gap: 8,
-  },
-  playlistModalTitle: {
-    fontSize: 20,
-    fontWeight: "600",
-    color: AppColors.textPrimary,
-  },
-  playlistModalDescription: {
-    fontSize: 14,
-    color: AppColors.textSecondary,
-    textAlign: "center",
-  },
-  playlistList: {
-    maxHeight: 300,
-  },
-  playlistItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: 12,
-    paddingHorizontal: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: "#2A2A2A",
-  },
-  playlistItemContent: {
-    flex: 1,
-  },
-  playlistName: {
-    fontSize: 16,
-    fontWeight: "500",
-    color: AppColors.textPrimary,
-  },
-  playlistSongCount: {
-    fontSize: 13,
-    color: AppColors.textSecondary,
-    marginTop: 2,
-  },
-  playlistModalActions: {
-    flexDirection: "row",
-    gap: 12,
-    marginTop: 8,
-  },
-  playlistModalButton: {
-    flex: 1,
-    paddingVertical: 14,
-    borderRadius: 12,
-    alignItems: "center",
-  },
-  cancelButton: {
-    backgroundColor: "transparent",
-    borderWidth: 1,
-    borderColor: AppColors.accentCyan,
-  },
-  addButton: {
-    backgroundColor: AppColors.accentCyan,
-  },
-  cancelButtonText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: AppColors.accentCyan,
-  },
-  addButtonText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: AppColors.textPrimary,
-  },
 });
-
-// Memoize component to prevent unnecessary re-renders
-export const SongActionsMenu = React.memo(SongActionsMenuComponent);
-SongActionsMenu.displayName = "SongActionsMenu";

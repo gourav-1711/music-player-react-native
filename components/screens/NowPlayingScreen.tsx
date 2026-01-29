@@ -58,7 +58,7 @@ export const NowPlayingScreen = () => {
   useEffect(() => {
     progress.value = position / 1000;
     max.value = duration / 1000 || 1;
-  }, [position, duration]);
+  }, [position, duration, progress, max]);
 
   const onPlayPause = () => {
     if (isPlaying) {
@@ -87,7 +87,12 @@ export const NowPlayingScreen = () => {
   }, []);
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top + 12 }]}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top + 12, paddingBottom: insets.bottom - 24 },
+      ]}
+    >
       {/* Header */}
       <View style={styles.header}>
         <Pressable style={styles.headerButton} onPress={onClose}>
@@ -103,7 +108,11 @@ export const NowPlayingScreen = () => {
       {/* Album Artwork */}
       <View style={styles.artworkContainer}>
         {song?.cover ? (
-          <Image source={{ uri: song.cover }} style={styles.artwork} />
+          <Image
+            source={{ uri: song.cover }}
+            style={styles.artwork}
+            resizeMode="contain"
+          />
         ) : (
           <View style={[styles.artwork, styles.placeholderArt]}>
             <View style={styles.placeholderContent}>
@@ -117,7 +126,9 @@ export const NowPlayingScreen = () => {
       {/* Song Info */}
       <View style={styles.songInfo}>
         <View style={styles.songTitleRow}>
-          <Text style={styles.songTitle}>{song?.title}</Text>
+          <Text style={styles.songTitle} numberOfLines={1} ellipsizeMode="tail">
+            {song?.title}
+          </Text>
           <Pressable onPress={() => favouriteToggle(song)}>
             <Ionicons
               name={isFavorite ? "heart" : "heart-outline"}
@@ -128,7 +139,9 @@ export const NowPlayingScreen = () => {
             />
           </Pressable>
         </View>
-        <Text style={styles.artistName}>{song?.artist}</Text>
+        <Text style={styles.artistName} numberOfLines={1}>
+          {song?.artist}
+        </Text>
       </View>
 
       {/* Progress Slider */}
@@ -162,11 +175,14 @@ export const NowPlayingScreen = () => {
           style={styles.controlButton}
           onPress={toggleShuffle}
         >
-          <Ionicons
-            name="shuffle"
-            size={24}
-            color={shuffle ? AppColors.accentCyan : AppColors.textSecondary}
-          />
+          <View style={{ alignItems: "center", gap: 4 }}>
+            <Ionicons
+              name="shuffle"
+              size={24}
+              color={shuffle ? AppColors.accentCyan : AppColors.textSecondary}
+            />
+            <Text style={styles.controlLabel}>Shuffle</Text>
+          </View>
         </Pressable>
 
         <Pressable
@@ -206,11 +222,14 @@ export const NowPlayingScreen = () => {
           style={styles.controlButton}
           onPress={toggleRepeat}
         >
-          <Ionicons
-            name="repeat"
-            size={24}
-            color={repeat ? AppColors.accentCyan : AppColors.textSecondary}
-          />
+          <View style={{ alignItems: "center", gap: 4 }}>
+            <Ionicons
+              name="repeat"
+              size={24}
+              color={repeat ? AppColors.accentCyan : AppColors.textSecondary}
+            />
+            <Text style={styles.controlLabel}>Loop</Text>
+          </View>
         </Pressable>
       </View>
     </View>
@@ -233,12 +252,16 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   artworkContainer: {
+    flex: 1,
+    justifyContent: "flex-end", // Push content down in the available space
     alignItems: "center",
-    marginBottom: 12,
+    marginBottom: 24, // Increase margin for better spacing from controls
   },
   artwork: {
-    width: ARTWORK_SIZE,
-    height: ARTWORK_SIZE,
+    width: "100%", // Flexible width
+    height: "100%", // Flexible height
+    aspectRatio: 1, // Maintain square aspect ratio
+    maxHeight: ARTWORK_SIZE, // Limit max size to original design
     borderRadius: 20,
   },
   placeholderArt: {
@@ -278,6 +301,8 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "bold",
     color: AppColors.textPrimary,
+    flex: 1,
+    marginRight: 16,
   },
   artistName: {
     fontSize: 16,
@@ -344,5 +369,10 @@ const styles = StyleSheet.create({
   },
   bottomTabTextActive: {
     color: AppColors.textPrimary,
+  },
+  controlLabel: {
+    fontSize: 10,
+    color: AppColors.textSecondary,
+    fontWeight: "500",
   },
 });

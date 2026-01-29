@@ -1,24 +1,8 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
+import { zustandStorage } from "./storageAdapter";
 
-// Custom storage adapter for Zustand
-const storage = {
-  getItem: async (name: string) => {
-    // console.log(name, "has been retrieved");
-    return (await AsyncStorage.getItem(name)) || null;
-  },
-  setItem: async (name: string, value: string) => {
-    // console.log(name, "with value", value, "has been saved");
-    await AsyncStorage.setItem(name, value);
-  },
-  removeItem: async (name: string) => {
-    // console.log(name, "has been deleted");
-    await AsyncStorage.removeItem(name);
-  },
-};
-
-export interface SettingsState {
+export type SettingsState = {
   // Appearance
   accentColor: string;
   setAccentColor: (color: string) => void;
@@ -39,9 +23,12 @@ export interface SettingsState {
   autoplayNext: boolean;
   toggleAutoplayNext: () => void;
 
+  resumeOnStartup: boolean;
+  toggleResumeOnStartup: () => void;
+
   showRandomCoverArt: boolean;
   toggleShowRandomCoverArt: () => void;
-}
+};
 
 export const useSettingsStore = create<SettingsState>()(
   persist(
@@ -68,13 +55,17 @@ export const useSettingsStore = create<SettingsState>()(
       toggleAutoplayNext: () =>
         set((state) => ({ autoplayNext: !state.autoplayNext })),
 
+      resumeOnStartup: true,
+      toggleResumeOnStartup: () =>
+        set((state) => ({ resumeOnStartup: !state.resumeOnStartup })),
+
       showRandomCoverArt: true,
       toggleShowRandomCoverArt: () =>
         set((state) => ({ showRandomCoverArt: !state.showRandomCoverArt })),
     }),
     {
       name: "settings-storage",
-      storage: createJSONStorage(() => storage),
+      storage: createJSONStorage(() => zustandStorage),
     },
   ),
 );

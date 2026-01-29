@@ -1,12 +1,16 @@
 import { MiniPlayer } from "@/components/MiniPlayer";
 import { ScreenHeader } from "@/components/ScreenHeader";
-import { SongListItem } from "@/components/SongListItem";
+import SongList from "@/components/SongList";
 import { AppColors } from "@/constants/theme";
 import { Song } from "@/constants/types";
 import useAudioContext from "@/hooks/store/audioContext";
 import { Ionicons } from "@expo/vector-icons";
-import { FlashList } from "@shopify/flash-list";
-import * as MediaLibrary from "expo-media-library";
+import {
+  Asset,
+  getAlbumsAsync,
+  getAssetsAsync,
+  MediaType,
+} from "expo-media-library";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
@@ -18,44 +22,32 @@ import {
   View,
 } from "react-native";
 
-// Helper function to format duration from seconds to mm:ss
-const formatDuration = (seconds: number): string => {
-  const mins = Math.floor(seconds / 60);
-  const secs = Math.floor(seconds % 60);
-  return `${mins}:${secs.toString().padStart(2, "0")}`;
-};
-
 export default function FolderDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [albumName, setAlbumName] = useState<string>("");
-  const [audioFiles, setAudioFiles] = useState<MediaLibrary.Asset[]>([]);
-  const [filteredAudioFiles, setFilteredAudioFiles] = useState<
-    MediaLibrary.Asset[]
-  >([]);
+  const [audioFiles, setAudioFiles] = useState<Asset[]>([]);
+  const [filteredAudioFiles, setFilteredAudioFiles] = useState<Asset[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchModalVisible, setSearchModalVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const currentSong = useAudioContext((state) => state.song);
-  const setSong = useAudioContext((state) => state.setSong);
-  const isPlaying = useAudioContext((state) => state.isPlaying);
-  const setPlaylist = useAudioContext((state) => state.setPlaylist);
+  const playList = useAudioContext((state) => state.playList);
 
   useEffect(() => {
     const fetchAudioFiles = async () => {
       try {
         setLoading(true);
 
-        const albums = await MediaLibrary.getAlbumsAsync();
+        const albums = await getAlbumsAsync();
         const album = albums.find((a) => a.id === id);
         if (album) {
           setAlbumName(album.title);
         }
 
         // Get audio files from the album
-        const assets = await MediaLibrary.getAssetsAsync({
+        const assets = await getAssetsAsync({
           album: id,
-          mediaType: MediaLibrary.MediaType.audio,
+          mediaType: MediaType.audio,
           first: 1000, // Get up to 1000 audio files
         });
 
@@ -76,45 +68,19 @@ export default function FolderDetailScreen() {
     router.back();
   };
 
-  const handleSongPress = (asset: MediaLibrary.Asset) => {
-    const song: Song = {
-      id: asset.id,
-      title: asset.filename.replace(/\.[^/.]+$/, ""), // Remove file extension
-      artist: undefined,
-      album: albumName,
-      duration: asset.duration,
-      cover: undefined,
-      url: asset.uri,
-    };
-    setSong(song);
-    if (audioFiles.length > 0) {
-      const songs: Song[] = audioFiles.map((asset) => ({
-        id: asset.id,
-        title: asset.filename.replace(/\.[^/.]+$/, ""), // Remove file extension
-        artist: undefined,
-        album: albumName,
-        duration: asset.duration,
-        cover: undefined,
-        url: asset.uri,
-      }));
-      setPlaylist(songs);
-    }
-    router.push("/(tabs)/playing");
-  };
-
   const handlePlayAll = () => {
     if (audioFiles.length > 0) {
       const songs: Song[] = audioFiles.map((asset) => ({
         id: asset.id,
-        title: asset.filename.replace(/\.[^/.]+$/, ""), // Remove file extension
+        title: asset.filename.replace(/\.[^/.]+$/, "") || asset.filename, // Remove file extension
         artist: undefined,
         album: albumName,
         duration: asset.duration,
         cover: undefined,
         url: asset.uri,
       }));
-      setPlaylist(songs);
-      handleSongPress(audioFiles[0]);
+      playList(songs, 0);
+      router.push("/(tabs)/playing");
     }
   };
 
@@ -133,6 +99,16 @@ export default function FolderDetailScreen() {
 
   const SONGS = searchQuery !== "" ? filteredAudioFiles : audioFiles;
 
+  const songData: Song[] = SONGS.map((item) => ({
+    id: item.id,
+    title: item.filename.replace(/\.[^/.]+$/, "") || item.filename,
+    artist: "Unknown Artist",
+    album: albumName,
+    duration: item.duration,
+    cover: undefined,
+    url: item.uri,
+  }));
+
   return (
     <View style={styles.container}>
       {/* Header */}
@@ -148,18 +124,10 @@ export default function FolderDetailScreen() {
         ]}
       />
       {searchModalVisible && (
-        <View>
-          {/* <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: 16 }}>
-              <Text style={{ fontSize: 18, fontWeight: "bold", color: AppColors.textPrimary }}>Search</Text>
-              <TouchableOpacity onPress={() => setSearchModalVisible(false)}>
-                <Ionicons name="close" size={24} color={AppColors.textPrimary} />
-              </TouchableOpacity>
-            </View> */}
-          <SearchInput
-            searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
-          />
-        </View>
+        <SearchInput
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+        />
       )}
 
       {/* Action Buttons */}
@@ -192,31 +160,12 @@ export default function FolderDetailScreen() {
           />
           <Text style={styles.emptyText}>No audio files found</Text>
           <Text style={styles.emptySubtext}>
-            This folder doesn't contain any audio files
+            This folder doesn&apos;t contain any audio files
           </Text>
         </View>
       ) : (
         <View style={styles.listContainer}>
-          <FlashList
-            data={SONGS}
-            keyExtractor={(item) => item.id}
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingBottom: 140 }}
-            renderItem={({ item: file }) => {
-              const isActive = currentSong?.id === file.id;
-              return (
-                <SongListItem
-                  title={file.filename.replace(/\.[^/.]+$/, "")}
-                  artist="Unknown Artist"
-                  duration={formatDuration(file.duration)}
-                  isPlaying={isActive && isPlaying}
-                  isActive={isActive}
-                  onPress={() => handleSongPress(file)}
-                  onMenuPress={() => {}}
-                />
-              );
-            }}
-          />
+          <SongList songs={songData} />
         </View>
       )}
 

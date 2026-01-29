@@ -3,10 +3,10 @@ import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
-interface ColorChooserProps {
+type ColorChooserProps = {
   selectedColor: string;
   onSelectColor: (color: string) => void;
-}
+};
 
 const PRESET_COLORS = [
   "#00F5D4", // Cyan

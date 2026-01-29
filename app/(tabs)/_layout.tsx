@@ -60,6 +60,12 @@ export default function TabLayout() {
           href: null,
         }}
       />
+       <Tabs.Screen
+        name="playlist/[id]/index"
+        options={{
+          href: null,
+        }}
+      />
       <Tabs.Screen
         name="settings/index"
         options={{

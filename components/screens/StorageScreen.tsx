@@ -1,21 +1,18 @@
 import { FolderListItem } from "@/components/FolderListItem";
 import { MiniPlayer } from "@/components/MiniPlayer";
 import { AppColors } from "@/constants/theme";
-import { Ionicons } from "@expo/vector-icons";
-import * as MediaLibrary from "expo-media-library";
-import { router } from "expo-router";
-import React, { useState } from "react";
+import { FlashList } from "@shopify/flash-list";
 import {
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+  Album,
+  getAlbumsAsync,
+  requestPermissionsAsync,
+} from "expo-media-library";
+import React, { useEffect, useState } from "react";
+import { StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const getPermission = async () => {
-  const { status } = await MediaLibrary.requestPermissionsAsync();
+  const { status } = await requestPermissionsAsync();
   if (status !== "granted") {
     alert("We need storage access to show your music");
     return false;
@@ -25,28 +22,20 @@ const getPermission = async () => {
 
 export const StorageScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
-  const [folders, setFolders] = useState<MediaLibrary.Album[]>([]);
-
-  const handleFolderPress = (albumID: string) => {
-    router.push(`/(tabs)/folders/${albumID}`);
-  };
-
-  const handleFilterPress = () => {
-    // TODO: Show filter options
-  };
+  const [folders, setFolders] = useState<Album[]>([]);
 
   const getAudioFolders = async () => {
     const permission = await getPermission();
     if (!permission) {
       return [];
     }
-    const folders = await MediaLibrary.getAlbumsAsync({
+    const folders = await getAlbumsAsync({
       includeSmartAlbums: true,
     });
     setFolders(folders);
   };
 
-  React.useEffect(() => {
+  useEffect(() => {
     getAudioFolders();
   }, []);
 
@@ -55,28 +44,18 @@ export const StorageScreen: React.FC = () => {
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.title}>Storage</Text>
-        <TouchableOpacity
-          style={styles.filterButton}
-          onPress={handleFilterPress}
-        >
-          <Ionicons name="options" size={24} color={AppColors.textPrimary} />
-        </TouchableOpacity>
       </View>
 
       {/* Folder List */}
-      <ScrollView
-        style={styles.scrollView}
-        showsVerticalScrollIndicator={false}
+      <FlashList
+        data={folders}
+        renderItem={({ item }: { item: Album }) => (
+          <FolderListItem id={item.id} name={item.title} />
+        )}
+        estimatedItemSize={60}
         contentContainerStyle={{ paddingBottom: 140 }}
-      >
-        {folders.map((folder) => (
-          <FolderListItem
-            key={folder.id}
-            name={folder.title}
-            onPress={() => handleFolderPress(folder.id)}
-          />
-        ))}
-      </ScrollView>
+        showsVerticalScrollIndicator={false}
+      />
 
       {/* Mini Player */}
       <View style={styles.miniPlayerContainer}>

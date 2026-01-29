@@ -5,12 +5,12 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useCallback, useMemo } from "react";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
-import { AudioPro } from "react-native-audio-pro";
+import { AudioPro, AudioProState, useAudioPro } from "react-native-audio-pro";
 
-interface MiniPlayerProps {
+type MiniPlayerProps = {
   showHeart?: boolean;
   lightTheme?: boolean;
-}
+};
 
 const MiniPlayerComponent: React.FC<MiniPlayerProps> = ({
   showHeart = false,
@@ -23,8 +23,12 @@ const MiniPlayerComponent: React.FC<MiniPlayerProps> = ({
     state.songs.find((favSong) => favSong?.id === song?.id),
   );
   const { playNext } = useAudioContext();
+  const { state: audioState } = useAudioPro();
+
   const togglePlayPause = useAudioContext((state) => state.setIsPlaying);
-  const isPlaying = useAudioContext((state) => state.isPlaying);
+  const isPlaying =
+    audioState === AudioProState.PLAYING ||
+    audioState === AudioProState.LOADING;
   const favouriteToggle = useFavourite((state) => state.toggleSong);
 
   // Memoize colors to prevent re-computation

@@ -1,4 +1,5 @@
 import { ColorChooser } from "@/components/ColorChooser";
+import { MiniPlayer } from "@/components/MiniPlayer";
 import { SettingsListItem } from "@/components/SettingsListItem";
 import { AppColors } from "@/constants/theme";
 import { useSettingsStore } from "@/hooks/store/settingsStore";
@@ -33,12 +34,14 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
     setAccentPurple,
     accentPink,
     setAccentPink,
-    alwaysShuffle,
-    toggleAlwaysShuffle,
-    alwaysRepeat,
-    toggleAlwaysRepeat,
-    autoplayNext,
-    toggleAutoplayNext,
+    // alwaysShuffle,
+    // toggleAlwaysShuffle,
+    // alwaysRepeat,
+    // toggleAlwaysRepeat,
+    // autoplayNext, // Kept in store but hidden from UI
+    // toggleAutoplayNext,
+    resumeOnStartup,
+    toggleResumeOnStartup,
     showRandomCoverArt,
     toggleShowRandomCoverArt,
   } = useSettingsStore();
@@ -134,7 +137,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
         {/* Playback Section */}
         <Text style={styles.sectionTitle}>PLAYBACK BEHAVIOR</Text>
         <View style={styles.section}>
-          <SettingsListItem
+          {/* <SettingsListItem
             icon="shuffle"
             iconColor="#A855F7"
             iconBgColor="#2A1A3A"
@@ -143,8 +146,8 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
             type="toggle"
             value={alwaysShuffle}
             onValueChange={toggleAlwaysShuffle}
-          />
-          <SettingsListItem
+          /> */}
+          {/* <SettingsListItem
             icon="repeat"
             iconColor="#22C55E"
             iconBgColor="#1A2A1A"
@@ -153,16 +156,16 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
             type="toggle"
             value={alwaysRepeat}
             onValueChange={toggleAlwaysRepeat}
-          />
+          /> */}
           <SettingsListItem
-            icon="play-skip-forward"
+            icon="play-circle"
             iconColor="#3B82F6"
             iconBgColor="#1A1A2A"
-            label="Autoplay Next Song"
-            description="Automatically play next track"
+            label="Resume Playback"
+            description="Autoplay last song on app open"
             type="toggle"
-            value={autoplayNext}
-            onValueChange={toggleAutoplayNext}
+            value={resumeOnStartup}
+            onValueChange={toggleResumeOnStartup}
           />
         </View>
 
@@ -207,6 +210,10 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
           />
         </Modal>
       </Portal>
+
+      <View style={styles.miniPlayerContainer}>
+        <MiniPlayer />
+      </View>
     </View>
   );
 };
@@ -253,5 +260,8 @@ const styles = StyleSheet.create({
     margin: 20,
     alignItems: "center",
     justifyContent: "center",
+  },
+  miniPlayerContainer: {
+    paddingBottom: 8,
   },
 });

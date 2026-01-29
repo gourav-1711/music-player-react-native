@@ -12,11 +12,6 @@ import { Modal, Portal } from "react-native-paper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 // Helper function to format duration
-const formatDuration = (seconds: number): string => {
-  const mins = Math.floor(seconds / 60);
-  const secs = Math.floor(seconds % 60);
-  return `${mins}:${secs.toString().padStart(2, "0")}`;
-};
 
 const FavouriteScreen = () => {
   const insets = useSafeAreaInsets();
@@ -127,13 +122,10 @@ const FavouriteScreen = () => {
           }
           renderItem={({ item: song }) => (
             <SongListItem
-              title={song.title}
-              artist={song.artist ?? "Unknown Artist"}
-              duration={formatDuration(song.duration)}
-              albumArt={song.cover}
+              song={song}
               isActive={currentSong?.id === song.id}
               isPlaying={currentSong?.id === song.id && isPlaying}
-              onPress={() => handleSongPress(song)}
+              onPress={handleSongPress}
             />
           )}
         />

@@ -1,18 +1,18 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { create } from "zustand";
 
-interface SongMetadata {
+type SongMetadata = {
   customCover?: string;
-}
+};
 
-interface SongMetadataState {
+type SongMetadataState = {
   metadata: Record<string, SongMetadata>; // songId -> metadata
   setCustomCover: (songId: string, coverUri: string) => void;
   getCustomCover: (songId: string) => string | undefined;
   removeCustomCover: (songId: string) => void;
   loadMetadata: () => Promise<void>;
   clearAllMetadata: () => Promise<void>;
-}
+};
 
 const STORAGE_KEY = "song-metadata";
 

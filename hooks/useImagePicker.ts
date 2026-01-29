@@ -1,7 +1,9 @@
 import useSongMetadata from "@/hooks/store/songMetadata";
-import * as ImagePicker from "expo-image-picker";
+import {
+  launchImageLibraryAsync,
+  requestMediaLibraryPermissionsAsync,
+} from "expo-image-picker";
 import { Alert } from "react-native";
-
 
 export const useImagePicker = () => {
   const setCustomCover = useSongMetadata((state) => state.setCustomCover);
@@ -9,8 +11,7 @@ export const useImagePicker = () => {
   const pickImageForSong = async (songId: string) => {
     try {
       // Request permissions
-      const { status } =
-        await ImagePicker.requestMediaLibraryPermissionsAsync();
+      const { status } = await requestMediaLibraryPermissionsAsync();
       if (status !== "granted") {
         Alert.alert(
           "Permission required",
@@ -20,7 +21,7 @@ export const useImagePicker = () => {
       }
 
       // Launch image picker
-      const result = await ImagePicker.launchImageLibraryAsync({
+      const result = await launchImageLibraryAsync({
         mediaTypes: ["images"],
         allowsEditing: true,
         aspect: [1, 1], // Square aspect ratio for album art

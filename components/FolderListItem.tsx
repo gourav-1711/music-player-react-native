@@ -1,21 +1,23 @@
 import { AppColors } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
-interface FolderListItemProps {
+type FolderListItemProps = {
+  id: string;
   name: string;
-  onPress?: () => void;
-  onMenuPress?: () => void;
-}
+};
 
 const FolderListItemComponent: React.FC<FolderListItemProps> = ({
+  id,
   name,
-  onPress,
-  onMenuPress,
 }) => {
   return (
-    <Pressable style={styles.container} onPress={onPress}>
+    <Pressable
+      style={styles.container}
+      onPress={() => router.push(`/(tabs)/folders/${id}`)}
+    >
       <View style={styles.iconContainer}>
         <Ionicons name="folder" size={28} color={AppColors.accentPink} />
       </View>
@@ -25,14 +27,6 @@ const FolderListItemComponent: React.FC<FolderListItemProps> = ({
           {name}
         </Text>
       </View>
-
-      <Pressable style={styles.menuButton} onPress={onMenuPress}>
-        <Ionicons
-          name="ellipsis-vertical"
-          size={20}
-          color={AppColors.textSecondary}
-        />
-      </Pressable>
     </Pressable>
   );
 };

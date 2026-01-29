@@ -8,25 +8,25 @@ export const useAudioLifecycle = () => {
   const playPrevious = useAudioContext((state) => state.playPrevious);
 
   useEffect(() => {
-    console.log("Setting up audio lifecycle listeners");
-
     // AudioPro uses a single event listener for all events
     const subscription = AudioPro.addEventListener((event) => {
-      // console.log("AudioPro Event:", event.type); // Uncomment for debugging
       switch (event.type) {
         case AudioProEventType.TRACK_ENDED:
-          console.log("Track ended event received, playing next");
           if (useSettingsStore.getState().autoplayNext) {
             playNext();
           }
           break;
         case AudioProEventType.REMOTE_NEXT:
-          console.log("Remote next event received");
           playNext(true);
           break;
         case AudioProEventType.REMOTE_PREV:
-          console.log("Remote prev event received");
           playPrevious();
+          break;
+        case AudioProEventType.PROGRESS:
+          // Update last position in store
+          if (event.payload?.position) {
+            useAudioContext.getState().setLastPosition(event.payload.position);
+          }
           break;
       }
     });
@@ -36,3 +36,4 @@ export const useAudioLifecycle = () => {
     };
   }, [playNext, playPrevious]);
 };
+

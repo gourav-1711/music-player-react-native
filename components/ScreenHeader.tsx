@@ -8,11 +8,11 @@ interface ScreenHeaderProps {
   title: string;
   showBackButton?: boolean;
   onBackPress?: () => void;
-  rightActions?: Array<{
+  rightActions?: {
     icon: keyof typeof Ionicons.glyphMap;
     onPress: () => void;
     color?: string;
-  }>;
+  }[];
   rightComponent?: React.ReactNode;
   lightTheme?: boolean;
   titleAlign?: "left" | "center";
